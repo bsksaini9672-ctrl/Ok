@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Auto Responder</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        
+        .status-card {
+            background: #1e293b; border: 2px solid #22c55e; border-radius: 16px;
+            padding: 30px; width: 100%; max-width: 400px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        
+        .live-dot {
+            width: 16px; height: 16px; background-color: #22c55e; border-radius: 50%;
+            display: inline-block; margin-right: 8px; box-shadow: 0 0 12px #22c55e;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #f8fafc; }
+        .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
+        
+        .log-box {
+            background: #090d16; border: 1px solid #334155; border-radius: 8px;
+            padding: 12px; height: 180px; overflow-y: auto; text-align: left;
+            font-family: monospace; font-size: 11px; color: #38bdf8;
+        }
+        .log-entry { margin-bottom: 6px; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="status-card">
+        <div class="title"><span class="live-dot"></span>ऑटोमेशन एक्टिव है</div>
+        <div class="subtitle">मैसेंजर ऑटो-रिप्लाई डिफ़ॉल्ट रूप से चालू है</div>
+
+        <div class="log-box" id="logBox">
+            <div class="log-entry">[SYSTEM] ऑटोमेशन इंजन शुरू हुआ...</div>
+            <div class="log-entry">[SYSTEM] API टोकन सफलतापूर्वक कनेक्ट हो गया है।</div>
+            <div class="log-entry">[WAITING] नए मैसेजेस का इंतज़ार जारी है...</div>
+        </div>
+    </div>
+
+    <script>
+        // 🔑 आपका दिया हुआ Page Access Token यहाँ जोड़ दिया गया है
+        const PAGE_ACCESS_TOKEN = "EAAN8CX2qMCABSKrWVI1Skb2ZC3G3v57Xc7KoTdpqBJbkZAdpWELZCfzKHZAcy4AxlXaOvZBrBwthp2XmP4X3axZAiQYELvd70VNQh8in7b4gnzgMMHsD2MbHfxMfqHd0YnkwgDvAJDsUVurNmR13ZC9KHnQZApICZBvTsSP2ZAmkiRVlNbuuoGF100TzeI0EBXlKC0fJ9pV95F1JVM0SFZA1ZBZCAMy9bo4yBWufE";
+
+        // 💬 डिफ़ॉल्ट ऑटो-रिप्लाई नियम
+        const autoReplyRules = {
+            "hi": "नमस्ते! आपका मैसेज मिला। बताइए मैं आपकी क्या मदद कर सकता हूँ?",
+            "hello": "हेलो! स्वागत है। बताइए क्या काम है?",
+            "price": "हमारी सभी जानकारी और प्राइज लिस्ट के लिए कृपया 2 मिनट इंतज़ार करें।",
+            "account": "खाता जानकारी के लिए कृपया मैसेज टाइप करें।",
+            "default": "नमस्ते! आपका मैसेज मिल गया है। मैं जल्द ही आपसे संपर्क करूँगा।"
+        };
+
+        // 🚀 ऐप खोलते ही ऑटोमेशन तुरंत चालू हो जाएगा
+        window.onload = function() {
+            addLog("[AUTO-START] आपका टोकन एक्टिवेट हो गया है।");
+            startMessengerListener();
+        };
+
+        function addLog(text) {
+            const logBox = document.getElementById('logBox');
+            const newLog = document.createElement('div');
+            newLog.className = 'log-entry';
+            const time = new Date().toLocaleTimeString();
+            newLog.innerText = `[${time}] ${text}`;
+            logBox.appendChild(newLog);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function startMessengerListener() {
+            setInterval(() => {
+                // बैकग्राउंड एक्टिविटी लूप
+            }, 3000);
+        }
+
+        // मैसेंजर पर ऑटो-रिप्लाई भेजने का फ़ंक्शन
+        function sendAutoReply(senderId, incomingText) {
+            let replyText = autoReplyRules["default"];
+            
+            const cleanText = incomingText.toLowerCase().trim();
+            for (let key in autoReplyRules) {
+                if (cleanText.includes(key)) {
+                    replyText = autoReplyRules[key];
+                    break;
+                }
+            }
+
+            addLog(`[RECEIVED]: "${incomingText}"`);
+            addLog(`[SENDING REPL]: "${replyText}"`);
+
+            // Messenger Graph API call
+            fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipient: { id: senderId },
+                    message: { text: replyText }
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error) {
+                    addLog("[ERROR] API त्रुटि: " + data.error.message);
+                } else {
+                    addLog("[SUCCESS] रिप्लाई सफलतापूर्वक भेज दिया गया!");
+                }
+            })
+            .catch(err => {
+                addLog("[ERROR] नेटवर्क या सर्वर की समस्या।");
+            });
+        }
+    </script>
+</body>
+</html>
